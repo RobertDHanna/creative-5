@@ -1,31 +1,33 @@
 <template>
   <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </div>
-    <router-view/>
+    <message/>
+    <router-view></router-view>
+    <my-footer/>
   </div>
 </template>
 
+<script>
+import Message from "./components/Message.vue";
+import MyFooter from "./components/Footer.vue";
+
+export default {
+  name: "app",
+  components: {
+    Message,
+    MyFooter
+  }
+};
+</script>
+
 <style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
+html {
+  overflow: hidden;
 }
-#nav {
-  padding: 30px;
+.hero-body {
+  overflow: auto;
+  height: 100px;
 }
-
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-#nav a.router-link-exact-active {
-  color: #42b983;
+.container {
+  margin-bottom: 20px;
 }
 </style>
