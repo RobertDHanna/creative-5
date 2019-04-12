@@ -21,18 +21,14 @@
 
 <script>
 export default {
-  data: function() {
-    return {
-      blogs: []
-    };
-  },
   created: async function() {
     const { id } = this.$route.params;
-    const result = await fetch(`/api/blogs`).then(r => r.json());
-
-    this.blogs = result.slice().sort((a, b) => {
-      return new Date(b.createdAt) - new Date(a.createdAt);
-    });
+    await this.$store.dispatch("getBlogsBySlug", { slug: id });
+  },
+  computed: {
+    blogs() {
+      return this.$store.state.blogPosts;
+    }
   }
 };
 </script>

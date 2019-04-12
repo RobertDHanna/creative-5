@@ -11,7 +11,6 @@ const blogSchema = new mongoose.Schema({
     type: mongoose.Schema.ObjectId,
     ref: "User"
   },
-  slug: String,
   title: String,
   delta: Object,
   html: String,
@@ -55,9 +54,9 @@ router.put("/", auth.verifyToken, User.verify, async (req, res) => {
 });
 
 router.post("/", auth.verifyToken, User.verify, async (req, res) => {
-  const { userId, title, delta, html } = req.body;
+  const { title, delta, html } = req.body;
   const blog = new Blog({
-    userId,
+    user: req.user,
     title,
     delta,
     html,
@@ -72,12 +71,24 @@ router.post("/", auth.verifyToken, User.verify, async (req, res) => {
   }
 });
 
-router.delete("/", auth.verifyToken, User.verify, async (req, res) => {
-  const { id } = req.body;
+router.delete("/:id", auth.verifyToken, User.verify, async (req, res) => {
+  const { id } = req.params;
   const blog = await Blog.findOne({ _id: id });
   try {
     blog.delete();
     res.sendStatus(200);
+  } catch (err) {
+    console.log(err);
+    res.sendStatus(500);
+  }
+});
+
+router.get("/:slug", async (req, res) => {
+  const { slug } = req.params;
+  try {
+    const user = await User.find({ slug });
+    const blogs = await Blog.find({ user });
+    res.send(blogs);
   } catch (err) {
     console.log(err);
     res.sendStatus(500);

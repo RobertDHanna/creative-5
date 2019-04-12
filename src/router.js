@@ -7,11 +7,11 @@ import BlogView from "./components/BlogView";
 Vue.use(Router);
 
 export default new Router({
-  mode: "history",
+  // mode: "history",
   base: process.env.BASE_URL,
   routes: [
     { path: "/", component: Home, name: "home" },
     { path: "/edit/", component: BlogControls, name: "edit" },
-    { path: "/:id", component: BlogView, name: "blog" }
+    { path: "/view/:id", component: BlogView, name: "blog" }
   ]
 });

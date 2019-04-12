@@ -22,9 +22,9 @@
         </div>
         <div v-if="state === 'register'">
           <label class="label">Username</label>
-          <input class="input" type="text" placeholder="e.g JonSnow">
+          <input class="input" type="text" placeholder="e.g JonSnow" v-model="username">
           <label class="label">Password</label>
-          <input class="input" type="password" placeholder="e.g hunter12">
+          <input class="input" type="password" placeholder="e.g hunter12" v-model="password">
           <br>
           <label class="label">Blog Name</label>
           <input
@@ -35,9 +35,9 @@
             maxlength="75"
           >
           <br>
-          <a class="button is-dark" v-on:click="createBlog">Register</a>
+          <a class="button is-dark" v-on:click="register">Register</a>
           <br>
-          <p>http://smog.komfi.co/{{blogSlug}}</p>
+          <p>http://smog.komfi.co/#/view/{{blogSlug}}</p>
         </div>
       </div>
     </div>
@@ -56,6 +56,12 @@ export default {
       password: ""
     };
   },
+  async created() {
+    await this.$store.dispatch("getUser");
+    if (this.$store.state.user) {
+      this.$router.push("edit");
+    }
+  },
   methods: {
     login: async function() {
       try {
@@ -64,7 +70,7 @@ export default {
           password: this.password
         });
         if (this.error === "") {
-          this.$router.push("/edit");
+          this.$router.push("edit");
         } else {
           this.$router.app.$emit(
             "error-message",
@@ -73,6 +79,32 @@ export default {
         }
       } catch (error) {
         console.log(error);
+      }
+    },
+    register: async function() {
+      if (
+        this.blogSlug.length > 0 &&
+        this.username.length > 0 &&
+        this.password.length > 0
+      ) {
+        try {
+          this.error = await this.$store.dispatch("register", {
+            name: this.username,
+            username: this.username,
+            password: this.password,
+            slug: this.blogSlug
+          });
+          if (this.error === "") {
+            this.$router.push("edit");
+          } else {
+            console.log(this.error);
+            this.$router.app.$emit("error-message", this.error);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      } else {
+        this.$router.app.$emit("error-message", "All fields are required!");
       }
     },
     createBlog: async function() {

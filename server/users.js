@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema({
   username: String,
   password: String,
   name: String,
+  slug: String,
   tokens: []
 });
 
@@ -94,16 +95,23 @@ router.post("/", async (req, res) => {
     const existingUser = await User.findOne({
       username: req.body.username
     });
-    if (existingUser)
+    const existingSlug = await User.findOne({
+      slug: req.body.slug
+    });
+    if (existingUser || existingSlug) {
+      let message = existingUser ? "That username already exists." : "";
+      message += existingSlug ? "\nThat blog name already exists." : "";
       return res.status(403).send({
-        message: "That username already exists."
+        message
       });
+    }
 
     // create new user
     const user = new User({
       username: req.body.username,
       password: req.body.password,
-      name: req.body.name
+      name: req.body.name,
+      slug: req.body.slug
     });
     await user.save();
     login(user, res);

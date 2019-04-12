@@ -1,61 +1,72 @@
 <template>
   <section class="hero is-info is-fullheight">
     <div class="BC--hero-body hero-body" v-if="user !== null">
-      <div class="container" v-if="state === 'new'">
-        <input
-          class="input is-info"
-          type="text"
-          placeholder="Blog Title Here"
-          v-model="blogTitle"
-          maxlength="35"
-        >
-        <div class="editor-container">
-          <div id="editor">
-            <h1>Creation Starts Here</h1>
-            <p>Tell your fans what you are doing.</p>
-            <ul>
-              <li>Try</li>
-              <li>Adding</li>
-              <li>A List!</li>
-            </ul>
+      <div class="blog-controls-big-wrapper">
+        <div class="log-controls">
+          <div>
+            <a class="button is-dark is-small" v-on:click="logout">Log Out</a>
+          </div>
+          <div>
+            Your Blog URL:
+            <span style="color: black;">http://smog.komfi.co/#/view/{{user.slug}}</span>
           </div>
         </div>
-        <a class="cancel-button button is-white" v-on:click="state = 'pick'">Cancel</a>
-        <a class="create-button button is-white" v-on:click="createBlogPost">Create</a>
-      </div>
-      <div class="container" v-if="state === 'pick'">
-        <p class="edit-message">Edit/View an old blog</p>
-        <ul class="blog-items">
-          <li class="blog-item" v-for="blog in blogs" :key="blog.id">
-            <span class="blog-title">{{blog.title}}</span>
-            <div>
-              <a class="edit-button button" v-on:click="deleteBlogPost(blog)">
-                <i class="far fa-trash-alt"></i>
-              </a>
-              <a class="edit-button button" v-on:click="editBlogPost(blog)">
-                <i class="far fa-edit"></i>
-              </a>
+        <div class="container" v-if="state === 'new'">
+          <input
+            class="input is-info"
+            type="text"
+            placeholder="Blog Title Here"
+            v-model="blogTitle"
+            maxlength="35"
+          >
+          <div class="editor-container">
+            <div id="editor">
+              <h1>Creation Starts Here</h1>
+              <p>Tell your fans what you are doing.</p>
+              <ul>
+                <li>Try</li>
+                <li>Adding</li>
+                <li>A List!</li>
+              </ul>
             </div>
-          </li>
-        </ul>
-        <hr>
-        <a class="button is-primary" v-on:click="makeNewBlog">
-          <i class="fas fa-plus"></i> Post
-        </a>
-      </div>
-      <div class="container" v-if="state === 'edit'">
-        <input
-          class="input is-info"
-          type="text"
-          placeholder="Blog Title Here"
-          v-model="blogTitle"
-          maxlength="35"
-        >
-        <div class="editor-container">
-          <div id="editor"></div>
+          </div>
+          <a class="cancel-button button is-white" v-on:click="state = 'pick'">Cancel</a>
+          <a class="create-button button is-white" v-on:click="createBlogPost">Create</a>
         </div>
-        <a class="cancel-button button is-white" v-on:click="state = 'pick'">Cancel</a>
-        <a class="create-button button is-white" v-on:click="createBlogPost">Update</a>
+        <div class="container" v-if="state === 'pick'">
+          <p class="edit-message">Edit/View an old blog</p>
+          <ul class="blog-items">
+            <li class="blog-item" v-for="blog in blogs" :key="blog.id">
+              <span class="blog-title">{{blog.title}}</span>
+              <div>
+                <a class="edit-button button" v-on:click="deleteBlogPost(blog)">
+                  <i class="far fa-trash-alt"></i>
+                </a>
+                <a class="edit-button button" v-on:click="editBlogPost(blog)">
+                  <i class="far fa-edit"></i>
+                </a>
+              </div>
+            </li>
+          </ul>
+          <hr>
+          <a class="button is-primary" v-on:click="makeNewBlog">
+            <i class="fas fa-plus"></i> Post
+          </a>
+        </div>
+        <div class="container" v-if="state === 'edit'">
+          <input
+            class="input is-info"
+            type="text"
+            placeholder="Blog Title Here"
+            v-model="blogTitle"
+            maxlength="35"
+          >
+          <div class="editor-container">
+            <div id="editor"></div>
+          </div>
+          <a class="cancel-button button is-white" v-on:click="state = 'pick'">Cancel</a>
+          <a class="create-button button is-white" v-on:click="createBlogPost">Update</a>
+        </div>
       </div>
     </div>
     <div class="BC--hero-body hero-body" v-else>
@@ -65,15 +76,16 @@
 </template>
 
 <script>
-import { setTimeout, setInterval, clearInterval } from "timers";
+import { setInterval, clearInterval } from "timers";
 
 export default {
   created: async function() {
-    this.getBlogPosts();
+    await this.$store.dispatch("getUser");
+    await this.$store.dispatch("getBlogPosts");
   },
   data: function() {
     return {
-      blogs: [],
+      // blogs: [],
       blogTitle: "",
       state: "pick",
       activeBlog: null
@@ -82,27 +94,20 @@ export default {
   computed: {
     user() {
       return this.$store.state.user;
+    },
+    blogs() {
+      return this.$store.state.blogPosts;
     }
   },
   methods: {
-    getBlogPosts: async function() {
-      const result = await fetch(`/api/blogs`).then(r => r.json());
-      this.blogs = result.slice().sort((a, b) => {
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      });
+    logout: async function() {
+      await this.$store.dispatch("logout");
+      this.$router.push("/");
     },
-    deleteBlogPost: function(blog) {
+    deleteBlogPost: async function(blog) {
       const id = blog._id;
-      const result = fetch(`/api/blogs`, {
-        method: "DELETE",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ id })
-      }).then(result => {
-        this.getBlogPosts();
-      });
+      await this.$store.dispatch("deleteBlogPosts", { id });
+      await this.$store.dispatch("getBlogPosts");
     },
     createBlogPost: async function() {
       if (this.blogTitle.length === 0) {
@@ -126,16 +131,11 @@ export default {
       if (this.activeBlog) {
         data = { ...data, id: this.activeBlog._id };
       }
-      const result = await fetch(`/api/blogs`, {
-        method: this.state === "new" ? "POST" : "PUT",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-      }).then(r => r.json());
+      this.state === "new"
+        ? await this.$store.dispatch("createBlogPost", data)
+        : await this.$store.dispatch("editBlogPost", data);
       this.resetState();
-      await this.getBlogPosts();
+      await this.$store.dispatch("getBlogPosts");
       this.state = "pick";
     },
     editBlogPost: function(blog) {
@@ -157,7 +157,7 @@ export default {
         const interval = setInterval(() => {
           if (document.querySelector("#editor")) {
             clearInterval(interval);
-            this.quill = new Quill("#editor", {
+            this.quill = new window.Quill("#editor", {
               theme: "snow"
             });
             resolve();
@@ -168,13 +168,17 @@ export default {
     resetState: function() {
       this.blogTitle = "";
       this.activeBlog = null;
-      this.blogs = [];
     }
   }
 };
 </script>
 
 <style scoped>
+.log-controls {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
 .edit-message {
   font-size: 22px;
   margin-bottom: 10px;
@@ -229,5 +233,8 @@ input {
   width: 30%;
   min-width: 200px;
   margin-bottom: 10px;
+}
+.blog-controls-big-wrapper {
+  margin: 0 auto;
 }
 </style>
